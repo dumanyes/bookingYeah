@@ -27,6 +27,25 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking.save(update_fields=['status'])
         return Response(BookingSerializer(booking).data)
 
+    @action(detail=True, methods=['post'])
+    def confirm(self, request, pk=None):
+        booking = self.get_object()
+        if booking.venue.owner != request.user:
+            return Response({'detail': 'Нет доступа.'}, status=status.HTTP_403_FORBIDDEN)
+        booking.status = 'confirmed'
+        booking.save(update_fields=['status'])
+        return Response(BookingSerializer(booking).data)
+
+    @action(detail=False, methods=['get'], url_path='venue/(?P<venue_pk>[^/.]+)')
+    def venue_bookings(self, request, venue_pk=None):
+        from venues.models import Venue
+        try:
+            venue = Venue.objects.get(pk=venue_pk, owner=request.user)
+        except Venue.DoesNotExist:
+            return Response({'detail': 'Нет доступа.'}, status=status.HTTP_403_FORBIDDEN)
+        bookings = Booking.objects.filter(venue=venue).select_related('user').order_by('-date', '-start_time')
+        return Response(BookingSerializer(bookings, many=True).data)
+
     @action(detail=False, methods=['get'], url_path='availability/(?P<venue_pk>[^/.]+)')
     def availability(self, request, venue_pk=None):
         date = request.query_params.get('date')

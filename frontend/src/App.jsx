@@ -9,6 +9,9 @@ import VenuesPage from './pages/VenuesPage'
 import VenueDetailPage from './pages/VenueDetailPage'
 import MyBookingsPage from './pages/MyBookingsPage'
 import TeammatesPage from './pages/TeammatesPage'
+import ProfilePage from './pages/ProfilePage'
+import MapPage from './pages/MapPage'
+import MyVenuesPage from './pages/MyVenuesPage'
 
 function PrivateRoute({ children }) {
   const { isAuthenticated } = useAuthStore()
@@ -29,8 +32,11 @@ export default function App() {
       <Route path="/" element={<Layout><HomePage /></Layout>} />
       <Route path="/venues" element={<Layout><VenuesPage /></Layout>} />
       <Route path="/venues/:id" element={<Layout><VenueDetailPage /></Layout>} />
+      <Route path="/map" element={<Layout><MapPage /></Layout>} />
       <Route path="/teammates" element={<Layout><TeammatesPage /></Layout>} />
       <Route path="/my-bookings" element={<PrivateRoute><Layout><MyBookingsPage /></Layout></PrivateRoute>} />
+      <Route path="/profile" element={<PrivateRoute><Layout><ProfilePage /></Layout></PrivateRoute>} />
+      <Route path="/venues/my" element={<PrivateRoute><Layout><MyVenuesPage /></Layout></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

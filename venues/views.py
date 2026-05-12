@@ -1,9 +1,12 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Venue, VenueReview
+from .models import Venue, VenuePhoto, VenueReview
 from .serializers import (
     VenueListSerializer, VenueDetailSerializer,
-    VenueCreateUpdateSerializer, VenueReviewSerializer,
+    VenueCreateUpdateSerializer, VenueReviewSerializer, VenuePhotoSerializer,
 )
 
 
@@ -36,6 +39,22 @@ class VenueViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return [permissions.IsAuthenticated()]
         return super().get_permissions()
+
+    def get_queryset(self):
+        qs = Venue.objects.prefetch_related('photos')
+        if self.action in ('update', 'partial_update', 'destroy'):
+            return qs
+        return qs.filter(is_active=True)
+
+    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser], permission_classes=[permissions.IsAuthenticated])
+    def photos(self, request, pk=None):
+        venue = self.get_object()
+        if venue.owner != request.user:
+            return Response({'detail': 'Нет доступа.'}, status=status.HTTP_403_FORBIDDEN)
+        serializer = VenuePhotoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(venue=venue)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class VenueReviewViewSet(viewsets.ModelViewSet):
