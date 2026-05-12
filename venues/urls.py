@@ -5,10 +5,10 @@ from . import views
 router = DefaultRouter()
 router.register(r'', views.VenueViewSet, basename='venue')
 
-review_router = DefaultRouter()
-review_router.register(r'reviews', views.VenueReviewViewSet, basename='venue-review')
-
 urlpatterns = [
-    path('<int:venue_pk>/', include(review_router.urls)),
     path('', include(router.urls)),
+    path('<int:venue_pk>/reviews/', include([
+        path('', views.VenueReviewViewSet.as_view({'get': 'list', 'post': 'create'}), name='venue-reviews'),
+        path('<int:pk>/', views.VenueReviewViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='venue-review-detail'),
+    ])),
 ]
